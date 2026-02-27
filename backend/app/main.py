@@ -38,7 +38,9 @@ app = FastAPI(
 # Set all CORS enabled origins
 origins = ["http://localhost:5173", "http://localhost:8000"]
 if settings.BACKEND_CORS_ORIGINS:
-    origins.extend([str(origin) for origin in settings.BACKEND_CORS_ORIGINS])
+    for origin in settings.BACKEND_CORS_ORIGINS:
+        # Ensure we don't have trailing slashes as browsers don't send them in Origin header
+        origins.append(str(origin).rstrip("/"))
 
 app.add_middleware(
     CORSMiddleware,
