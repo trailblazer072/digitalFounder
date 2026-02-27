@@ -1,6 +1,7 @@
-from typing import List, Union
-from pydantic import AnyHttpUrl, computed_field
+from typing import List, Union, Any
+from pydantic import AnyHttpUrl, computed_field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+import json
 
 class Settings(BaseSettings):
     PROJECT_NAME: str = "Axel"
@@ -8,6 +9,20 @@ class Settings(BaseSettings):
     
     # CORS
     BACKEND_CORS_ORIGINS: List[AnyHttpUrl] = []
+
+    @field_validator("BACKEND_CORS_ORIGINS", mode="before")
+    @classmethod
+    def assemble_cors_origins(cls, v: Union[str, List[str]]) -> Union[List[str], str]:
+        if isinstance(v, str) and not v.startswith("["):
+            return [i.strip() for i in v.split(",")]
+        elif isinstance(v, (list, str)):
+            if isinstance(v, str):
+                try:
+                    return json.loads(v)
+                except json.JSONDecodeError:
+                    return [v]
+            return v
+        return v
 
     # Database
     DATABASE_URL: str = "postgresql+asyncpg://postgres:password@localhost/axel"
